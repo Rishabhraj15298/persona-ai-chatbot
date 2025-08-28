@@ -1,12 +1,11 @@
-
 import streamlit as st
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
 
 PERSONA_PROMPT = """ 
 You are Hitesh Choudhary, a well-known Indian tech educator, YouTuber, and mentor.
@@ -35,6 +34,8 @@ CAREER:
 
 COMMUNICATION STYLE:
 - Always respond in plain text only.
+- Don't use hindi script; use only Latin alphabet for Hinglish.
+- Keep answers concise, clear, and structured.
 - Prefer Hinglish; switch to full English only if student requests.
 - Tone: calm, composed, natural, human-like.
 - Show empathy, e.g., "Haan, shuru mei tough lagta hain but jaise jaise hm uss chiz ko practice krte h, hume uss chiz par command ho jata h."
@@ -200,3 +201,136 @@ Ho sakta hai—but sirf glamour dekh ke mat aana. Ye game consistency ka hai, no
 
 
 """
+
+st.set_page_config(
+    page_title="Chat with Hitesh Choudhary",
+    page_icon="💬",
+    layout="wide",
+    # initial_sidebar_state="collapsed"
+)
+
+if "model" not in st.session_state:
+    st.session_state.model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction=PERSONA_PROMPT
+    )
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    .stApp > header, #MainMenu, .stDeployButton, footer {
+        display: none;
+    }
+    
+    .stApp {
+        background: #000000;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .stChatInput > div > div > input {
+        background: rgba(45, 55, 72, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 24px !important;
+        color: #ffffff !important;
+    }
+    
+    .stChatInput > div > div > input::placeholder {
+        color: #a0aec0 !important;
+    }
+    
+    .stChatInput button {
+        background: #4299e1 !important;
+        border: none !important;
+        border-radius: 50% !important;
+    }
+    
+    .st-emotion-cache-16txtg2 {
+        background-color: transparent !important;
+    }
+    
+    .st-emotion-cache-1d211q {
+        background-color: #007bff;
+        border-radius: 1.5rem 1.5rem 0 1.5rem;
+        color: white;
+    }
+    
+    .st-emotion-cache-809vtf {
+        background-color: #2c2f34;
+        border-radius: 1.5rem 1.5rem 1.5rem 0;
+        color: white;
+    }
+    
+    .st-emotion-cache-16j9p4e {
+        background-color: transparent;
+    }
+    
+    .st-emotion-cache-1h5049 {
+        border-bottom: 2px solid #2d2f34;
+    }
+    
+    .st-emotion-cache-1c7v0s {
+        background-color: #007bff;
+        border-radius: 1rem 1rem 0 1rem;
+        color: white;
+    }
+    
+    .st-emotion-cache-1a65x3d {
+        background-color: #2c2f34;
+        border-radius: 1rem 1rem 1rem 0;
+        color: white;
+    }
+    
+    @media (max-width: 600px) {
+        .main {
+            padding: 1rem;
+        }
+        .chat-header {
+            padding: 1rem;
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+    <div style="background-color: #1c1f24; padding: 1rem; border-bottom: 2px solid #2d2f34; display: flex; align-items: center; border-radius: 24px 24px 0 0;">
+        <img src="https://avatars.githubusercontent.com/u/11613311?v=4" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #43C6AC; margin-right: 1rem;">
+        <div>
+            <h3 style="color: #fff; margin: 0; display: inline-block;">Hitesh Choudhary <span style="color: #43C6AC; font-size: 0.8rem;">● Online</span></h3>
+            <p style="color: #aaa; font-size: 0.9rem; margin: 0;">AI Assistant</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+if not st.session_state.chat_history:
+    with st.chat_message("assistant", avatar="https://avatars.githubusercontent.com/u/11613311?v=4"):
+        st.write("Hey there, how can I help you? ")
+
+for message in st.session_state.chat_history:
+    with st.chat_message(message["role"], avatar="https://avatars.githubusercontent.com/u/11613311?v=4" if message["role"] == "assistant" else None):
+        st.write(message["content"])
+
+if prompt := st.chat_input("Type a message..."):
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    st.session_state.chat_history.append({"role": "user", "content": prompt})
+
+    with st.spinner("Hitesh bhai is typing..."):
+        try:
+            response = st.session_state.model.generate_content(prompt)
+            assistant_response = response.text
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+            assistant_response = "Sorry, I couldn't get a response. Please try again."
+
+    with st.chat_message("assistant", avatar="https://avatars.githubusercontent.com/u/11613311?v=4"):
+        st.write(assistant_response)
+    
+    st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
+    st.rerun()

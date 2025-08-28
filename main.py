@@ -333,4 +333,4 @@ if prompt := st.chat_input("Type a message..."):
         st.write(assistant_response)
     
     st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
-    st.rerun()
+   

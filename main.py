@@ -215,6 +215,9 @@ if "model" not in st.session_state:
         system_instruction=PERSONA_PROMPT
     )
 
+if "chat" not in st.session_state:
+    st.session_state.chat = st.session_state.model.start_chat(history=[])
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -307,30 +310,26 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-if not st.session_state.chat_history:
+if not st.session_state.chat.history:
     with st.chat_message("assistant", avatar="https://avatars.githubusercontent.com/u/11613311?v=4"):
         st.write("Hey there, how can I help you? ")
 
-for message in st.session_state.chat_history:
-    with st.chat_message(message["role"], avatar="https://avatars.githubusercontent.com/u/11613311?v=4" if message["role"] == "assistant" else None):
-        st.write(message["content"])
+for message in st.session_state.chat.history:
+    with st.chat_message(message.role, avatar="https://avatars.githubusercontent.com/u/11613311?v=4" if message.role == "assistant" else None):
+        st.write(message.parts[0].text)
 
 if prompt := st.chat_input("Type a message..."):
     with st.chat_message("user"):
         st.write(prompt)
-    
-    st.session_state.chat_history.append({"role": "user", "content": prompt})
-
     with st.spinner("Hitesh bhai is typing..."):
         try:
-            response = st.session_state.model.generate_content(prompt)
-            assistant_response = response.text
+            response = st.session_state.chat.send_message(prompt)
         except Exception as e:
             st.error(f"An error occurred: {e}")
-            assistant_response = "Sorry, I couldn't get a response. Please try again."
+            response = genai.types.Content(
+                parts=[genai.types.Part(text="Sorry, I couldn't get a response. Please try again.")],
+                role="assistant"
+            )
 
     with st.chat_message("assistant", avatar="https://avatars.githubusercontent.com/u/11613311?v=4"):
-        st.write(assistant_response)
-    
-    st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
-   
+        st.write(response.parts[0].text)

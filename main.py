@@ -211,7 +211,7 @@ st.set_page_config(
 
 if "model" not in st.session_state:
     st.session_state.model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=PERSONA_PROMPT
     )
 

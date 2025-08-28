@@ -211,7 +211,7 @@ st.set_page_config(
 
 if "model" not in st.session_state:
     st.session_state.model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=PERSONA_PROMPT
     )
 
@@ -333,4 +333,4 @@ if prompt := st.chat_input("Type a message..."):
         st.write(assistant_response)
     
     st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
-    st.rerun()
+   
